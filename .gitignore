@@ -1,4 +1,5 @@
 node_modules
+.yarn/install-state.gz
 jspm_packages
 bower_components
 .idea

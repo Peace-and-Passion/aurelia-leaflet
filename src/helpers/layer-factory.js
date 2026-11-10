@@ -1,4 +1,4 @@
-import {AureliaLeafletException} from '../aurelia-leaflet-exceptions';
+import {AureliaLeafletException} from '../aurelia-leaflet-exceptions.js';
 
 export class LayerFactory {
 

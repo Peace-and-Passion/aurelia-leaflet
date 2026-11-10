@@ -1,5 +1,5 @@
 import { PLATFORM } from 'aurelia-pal';
-import { LeafletCustomElement }  from './leaflet';
+import { LeafletCustomElement }  from './leaflet.js';
 
 export function configure(frameworkConfig) {
     frameworkConfig.globalResources(PLATFORM.moduleName('./leaflet'));

@@ -1,93 +1,40 @@
-var _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _class3, _temp;
-
-function _initDefineProp(target, property, descriptor, context) {
-  if (!descriptor) return;
-  Object.defineProperty(target, property, {
-    enumerable: descriptor.enumerable,
-    configurable: descriptor.configurable,
-    writable: descriptor.writable,
-    value: descriptor.initializer ? descriptor.initializer.call(context) : void 0
-  });
-}
-
-function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
-  var desc = {};
-  Object['ke' + 'ys'](descriptor).forEach(function (key) {
-    desc[key] = descriptor[key];
-  });
-  desc.enumerable = !!desc.enumerable;
-  desc.configurable = !!desc.configurable;
-
-  if ('value' in desc || desc.initializer) {
-    desc.writable = true;
-  }
-
-  desc = decorators.slice().reverse().reduce(function (desc, decorator) {
-    return decorator(target, property, desc) || desc;
-  }, desc);
-
-  if (context && desc.initializer !== void 0) {
-    desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
-    desc.initializer = undefined;
-  }
-
-  if (desc.initializer === void 0) {
-    Object['define' + 'Property'](target, property, desc);
-    desc = null;
-  }
-
-  return desc;
-}
-
-function _initializerWarningHelper(descriptor, context) {
-  throw new Error('Decorating class property failed. Please ensure that transform-class-properties is enabled.');
-}
-
+var _dec, _dec2, _class, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _LeafletCustomElement;
+function _initializerDefineProperty(e, i, r, l) { r && Object.defineProperty(e, i, { enumerable: r.enumerable, configurable: r.configurable, writable: r.writable, value: r.initializer ? r.initializer.call(l) : void 0 }); }
+function _applyDecoratedDescriptor(i, e, r, n, l) { var a = {}; return Object.keys(n).forEach(function (i) { a[i] = n[i]; }), a.enumerable = !!a.enumerable, a.configurable = !!a.configurable, ("value" in a || a.initializer) && (a.writable = !0), a = r.slice().reverse().reduce(function (r, n) { return n(i, e, r) || r; }, a), l && void 0 !== a.initializer && (a.value = a.initializer ? a.initializer.call(l) : void 0, a.initializer = void 0), void 0 === a.initializer ? (Object.defineProperty(i, e, a), null) : a; }
+function _initializerWarningHelper(r, e) { throw Error("Decorating class property failed. Please ensure that transform-class-properties is enabled and runs after the decorators transform."); }
 import { inject, customElement, useView, bindable } from 'aurelia-framework';
 import { EventAggregator } from 'aurelia-event-aggregator';
-import { AureliaLeafletException } from './aurelia-leaflet-exceptions';
-import { defaultMapOptions, defaultLayers } from './leaflet-defaults';
-import { LayerFactory } from './helpers/layer-factory';
+import { AureliaLeafletException } from './aurelia-leaflet-exceptions.js';
+import { defaultMapOptions, defaultLayers } from './leaflet-defaults.js';
+import { LayerFactory } from './helpers/layer-factory.js';
 import * as Leaflet from 'leaflet';
-
-export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useView('./leaflet.html'), _dec(_class = _dec2(_class = (_class2 = (_temp = _class3 = class LeafletCustomElement {
-
+export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useView('./leaflet.html'), _dec(_class = _dec2(_class = (_class2 = (_LeafletCustomElement = class LeafletCustomElement {
   constructor(eventAggregator, element) {
-    _initDefineProp(this, 'layers', _descriptor, this);
-
-    _initDefineProp(this, 'mapEvents', _descriptor2, this);
-
-    _initDefineProp(this, 'mapOptions', _descriptor3, this);
-
-    _initDefineProp(this, 'withLayerControl', _descriptor4, this);
-
-    _initDefineProp(this, 'withScaleControl', _descriptor5, this);
-
+    _initializerDefineProperty(this, "layers", _descriptor, this);
+    _initializerDefineProperty(this, "mapEvents", _descriptor2, this);
+    _initializerDefineProperty(this, "mapOptions", _descriptor3, this);
+    _initializerDefineProperty(this, "withLayerControl", _descriptor4, this);
+    _initializerDefineProperty(this, "withScaleControl", _descriptor5, this);
+    this.map = void 0;
     this.attachedLayers = {
       base: {},
       overlay: {}
     };
-
     this.L = Leaflet;
     this.eventAggregator = eventAggregator;
     this.element = element;
-
     this.layerFactory = new LayerFactory(this.L);
-
     this.mapInit = new Promise((resolve, reject) => {
       this.mapInitResolve = resolve;
       this.mapInitReject = reject;
     });
-
     this.eventsBound = new Promise((resolve, reject) => {
       this.eventsBoundResolve = resolve;
       this.eventsBoundReject = reject;
     });
-
-    this.mapOptions = defaultMapOptions;
+    this.mapOptions = Object.assign({}, defaultMapOptions);
     this.layers = defaultLayers;
   }
-
   layersChanged(newLayers, oldLayers) {
     if (oldLayers && oldLayers !== null) {
       this.removeOldLayers(oldLayers.base, 'base');
@@ -95,10 +42,11 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
     }
     this.attachLayers();
   }
-
   mapOptionsChanged(newOptions, oldOptions) {
-    this.mapOptions = Object.assign(defaultMapOptions, newOptions);
+    // Each map must retain its own options while asynchronous initialization is pending.
+    this.mapOptions = Object.assign({}, defaultMapOptions, newOptions);
 
+    // some options can get set on the map object after init
     this.mapInit.then(() => {
       if (oldOptions) {
         if (this.mapOptions.center !== oldOptions.center) {
@@ -113,12 +61,13 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
       }
     });
   }
-
   mapEventsChanged(newEvents, oldEvents) {
     this.mapInit.then(() => {
       if (newEvents && newEvents.length) {
         for (let eventName of newEvents) {
-          this.map.on(eventName, e => this.eventAggregator.publish('aurelia-leaflet', Object.assign(e, { map: this.map })));
+          this.map.on(eventName, e => this.eventAggregator.publish('aurelia-leaflet', Object.assign(e, {
+            map: this.map
+          })));
         }
       }
       if (oldEvents !== null) {
@@ -131,7 +80,6 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
       }
     });
   }
-
   withLayerControlChanged(newValue) {
     if (newValue === false) {
       this.mapInit.then(() => {
@@ -148,7 +96,6 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
       });
     }
   }
-
   withScaleControlChanged(newValue) {
     if (newValue === false) {
       this.mapInit.then(() => {
@@ -165,25 +112,23 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
       });
     }
   }
-
   attached() {
     return new Promise((resolve, reject) => {
+      // remove the center option before contructing the map to have a chance to bind to the "load" event
+      // first. The "load" event on the map gets fired after center and zoom are set for the first time.
       var center = this.mapOptions.center;
       delete this.mapOptions.center;
       if (!this.map) {
         this.map = new this.L.map(this.mapContainer, this.mapOptions);
       }
       this.mapOptions.center = center;
-
       if (this.map) {
         this.mapInitResolve();
       } else {
         this.mapInitReject();
         reject();
       }
-
       resolve();
-
       if (this.mapEvents) {
         this.eventsBound.then(() => {
           this.map.setView([this.mapOptions.center.lat, this.mapOptions.center.lng], this.mapOptions.zoomLevel);
@@ -193,7 +138,6 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
       }
     });
   }
-
   attachLayers() {
     let layersToAttach = {
       base: {},
@@ -218,7 +162,6 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
       }
     });
   }
-
   removeOldLayers(oldLayers, type) {
     if (!oldLayers || !oldLayers.length) {
       return;
@@ -235,7 +178,6 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
       }
       return removed;
     });
-
     for (let removedLayer of removedLayers) {
       this.mapInit.then(() => {
         let id = this.getLayerId(removedLayer);
@@ -246,7 +188,6 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
       });
     }
   }
-
   getLayerId(layer) {
     let id = layer.id ? layer.id : layer.url;
     if (!id) {
@@ -254,20 +195,29 @@ export let LeafletCustomElement = (_dec = customElement('leaflet'), _dec2 = useV
     }
     return id;
   }
-
-}, _class3.inject = [EventAggregator, Element], _temp), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'layers', [bindable], {
+}, _LeafletCustomElement.inject = [EventAggregator, Element], _LeafletCustomElement), _descriptor = _applyDecoratedDescriptor(_class2.prototype, "layers", [bindable], {
+  configurable: true,
   enumerable: true,
+  writable: true,
   initializer: null
-}), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, 'mapEvents', [bindable], {
+}), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, "mapEvents", [bindable], {
+  configurable: true,
   enumerable: true,
+  writable: true,
   initializer: null
-}), _descriptor3 = _applyDecoratedDescriptor(_class2.prototype, 'mapOptions', [bindable], {
+}), _descriptor3 = _applyDecoratedDescriptor(_class2.prototype, "mapOptions", [bindable], {
+  configurable: true,
   enumerable: true,
+  writable: true,
   initializer: null
-}), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, 'withLayerControl', [bindable], {
+}), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, "withLayerControl", [bindable], {
+  configurable: true,
   enumerable: true,
+  writable: true,
   initializer: null
-}), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, 'withScaleControl', [bindable], {
+}), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, "withScaleControl", [bindable], {
+  configurable: true,
   enumerable: true,
+  writable: true,
   initializer: null
-})), _class2)) || _class) || _class);
+}), _class2)) || _class) || _class);

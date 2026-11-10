@@ -1,17 +1,11 @@
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var defaultMapOptions = exports.defaultMapOptions = {
+export var defaultMapOptions = {
   center: {
     lat: 47.3686498,
     lng: 8.53918250
   },
   zoomLevel: 13
 };
-
-var defaultLayers = exports.defaultLayers = {
+export var defaultLayers = {
   base: [{
     id: 'OSM Tiles',
     type: 'tile',

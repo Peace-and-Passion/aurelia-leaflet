@@ -1,8 +1,8 @@
 import {inject, customElement, useView, bindable} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
-import {AureliaLeafletException} from './aurelia-leaflet-exceptions';
-import {defaultMapOptions, defaultLayers} from './leaflet-defaults';
-import {LayerFactory} from './helpers/layer-factory';
+import {AureliaLeafletException} from './aurelia-leaflet-exceptions.js';
+import {defaultMapOptions, defaultLayers} from './leaflet-defaults.js';
+import {LayerFactory} from './helpers/layer-factory.js';
 import * as Leaflet from 'leaflet';
 
 @customElement('leaflet')
@@ -40,7 +40,7 @@ export class LeafletCustomElement {
       this.eventsBoundReject = reject;
     });
 
-    this.mapOptions = defaultMapOptions;
+    this.mapOptions = Object.assign({}, defaultMapOptions);
     this.layers     = defaultLayers;
   }
 
@@ -53,7 +53,8 @@ export class LeafletCustomElement {
   }
 
   mapOptionsChanged(newOptions, oldOptions) {
-    this.mapOptions = Object.assign(defaultMapOptions, newOptions);
+    // Each map must retain its own options while asynchronous initialization is pending.
+    this.mapOptions = Object.assign({}, defaultMapOptions, newOptions);
 
     // some options can get set on the map object after init
     this.mapInit.then(() => {
