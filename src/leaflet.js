@@ -40,7 +40,8 @@ export class LeafletCustomElement {
       this.eventsBoundReject = reject;
     });
 
-    this.mapOptions = Object.assign({}, defaultMapOptions);
+    this._mapOptions = Object.assign({}, defaultMapOptions);
+    this.mapOptions = this._mapOptions;
     this.layers     = defaultLayers;
   }
 
@@ -53,20 +54,21 @@ export class LeafletCustomElement {
   }
 
   mapOptionsChanged(newOptions, oldOptions) {
-    // Each map must retain its own options while asynchronous initialization is pending.
-    this.mapOptions = Object.assign({}, defaultMapOptions, newOptions);
+    // Do not write to the bindable here: that would invoke this callback recursively.
+    // Each map keeps its own options while asynchronous initialization is pending.
+    this._mapOptions = Object.assign({}, defaultMapOptions, newOptions);
 
     // some options can get set on the map object after init
     this.mapInit.then(() => {
       if (oldOptions) {
-        if (this.mapOptions.center !== oldOptions.center) {
-          this.map.setView(this.mapOptions.center);
+        if (this._mapOptions.center !== oldOptions.center) {
+          this.map.setView(this._mapOptions.center);
         }
-        if (this.mapOptions.zoom !== oldOptions.zoom) {
-          this.map.setZoom(this.mapOptions.zoom);
+        if (this._mapOptions.zoom !== oldOptions.zoom) {
+          this.map.setZoom(this._mapOptions.zoom);
         }
-        if (this.mapOptions.maxBounds !== oldOptions.maxBounds) {
-          this.map.setMaxBounds(this.mapOptions.maxBounds);
+        if (this._mapOptions.maxBounds !== oldOptions.maxBounds) {
+          this.map.setMaxBounds(this._mapOptions.maxBounds);
         }
       }
     });
@@ -128,12 +130,12 @@ export class LeafletCustomElement {
     return new Promise((resolve, reject) => {
       // remove the center option before contructing the map to have a chance to bind to the "load" event
       // first. The "load" event on the map gets fired after center and zoom are set for the first time.
-      var center = this.mapOptions.center;
-      delete this.mapOptions.center;
+      var center = this._mapOptions.center;
+      delete this._mapOptions.center;
       if (!this.map) {
-        this.map = new this.L.map(this.mapContainer, this.mapOptions);
+        this.map = new this.L.map(this.mapContainer, this._mapOptions);
       }
-      this.mapOptions.center = center;
+      this._mapOptions.center = center;
 
       if (this.map) {
         this.mapInitResolve();
@@ -146,10 +148,10 @@ export class LeafletCustomElement {
 
       if (this.mapEvents) {
         this.eventsBound.then(() => {
-          this.map.setView([this.mapOptions.center.lat, this.mapOptions.center.lng], this.mapOptions.zoomLevel);
+          this.map.setView([this._mapOptions.center.lat, this._mapOptions.center.lng], this._mapOptions.zoomLevel);
         });
       } else {
-        this.map.setView([this.mapOptions.center.lat, this.mapOptions.center.lng], this.mapOptions.zoomLevel);
+        this.map.setView([this._mapOptions.center.lat, this._mapOptions.center.lng], this._mapOptions.zoomLevel);
       }
     });
   }
